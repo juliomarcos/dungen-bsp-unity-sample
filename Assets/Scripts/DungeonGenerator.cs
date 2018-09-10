@@ -7,11 +7,13 @@ using UnityEngine.Tilemaps;
 public class DungeonGenerator : MonoBehaviour {
 
 	public int dungeonSize;
+	public int numberOfIterations;
 	public Tile tile;
 	public bool shouldDebugDrawBsp;
 	
 	private Tilemap map;	
 	private char[,] dungeon;
+	private BspTree tree;
 
     // Use this for initialization
     void Start () {
@@ -39,13 +41,32 @@ public class DungeonGenerator : MonoBehaviour {
 	// Update is called once per frame
 	void OnDrawGizmos () {
 		if (shouldDebugDrawBsp) {
-			DebugDrawBSP();
+			DebugDrawBsp();
 		}
 	}
 
-	public void DebugDrawBSP() {
+	public void DebugDrawBsp() {
+		if (tree == null) return; // hasn't been generated yet
+
 		Gizmos.color = Color.green;
-		Gizmos.DrawLine(Vector3.zero, new Vector3(5, 5, 0));
+		DebugDrawBspNode(tree);
+	}
+
+	public void DebugDrawBspNode(BspTree node) {
+		print(node.container);
+
+		// top		
+		Gizmos.DrawLine(new Vector3(node.container.x, node.container.y, 0), new Vector3Int(node.container.xMax, node.container.y, 0));
+		// right
+		Gizmos.DrawLine(new Vector3(node.container.xMax, node.container.y, 0), new Vector3Int(node.container.xMax, node.container.yMax, 0));
+		// bottom
+		Gizmos.DrawLine(new Vector3(node.container.x, node.container.yMax, 0), new Vector3Int(node.container.xMax, node.container.yMax, 0));
+		// left
+		Gizmos.DrawLine(new Vector3(node.container.x, node.container.y, 0), new Vector3Int(node.container.x, node.container.yMax, 0));
+
+		// children
+		if (node.left != null) DebugDrawBspNode(node.left);
+		if (node.right != null) DebugDrawBspNode(node.right);
 	}
 
 	private void InitReferences()
@@ -57,8 +78,13 @@ public class DungeonGenerator : MonoBehaviour {
 	public void GenerateDungeon () {
 		InitReferences();
 		InitDungeonMatrix();
+		GenerateUsingBsp();
 		DrawTilesBasedOnMatrix();
 	}
 
-    
+    private void GenerateUsingBsp()
+    {
+		tree = BspTree.Split(numberOfIterations, new RectInt(0, 0, dungeonSize, dungeonSize));
+		
+    }
 }
