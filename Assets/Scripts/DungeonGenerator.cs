@@ -8,6 +8,7 @@ public class DungeonGenerator : MonoBehaviour {
 
 	public int dungeonSize;
 	public int numberOfIterations;
+	public int minDimension;
 	public Tile tile;
 	public bool shouldDebugDrawBsp;
 	
@@ -53,8 +54,6 @@ public class DungeonGenerator : MonoBehaviour {
 	}
 
 	public void DebugDrawBspNode(BspTree node) {
-		print(node.container);
-
 		// top		
 		Gizmos.DrawLine(new Vector3(node.container.x, node.container.y, 0), new Vector3Int(node.container.xMax, node.container.y, 0));
 		// right
@@ -84,7 +83,6 @@ public class DungeonGenerator : MonoBehaviour {
 
     private void GenerateUsingBsp()
     {
-		tree = BspTree.Split(numberOfIterations, new RectInt(0, 0, dungeonSize, dungeonSize));
-		
+		tree = BspTree.Split(numberOfIterations, minDimension, new RectInt(0, 0, dungeonSize, dungeonSize));
     }
 }
