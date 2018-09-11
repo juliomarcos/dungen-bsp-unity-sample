@@ -8,7 +8,6 @@ public class DungeonGenerator : MonoBehaviour {
 
 	public int dungeonSize;
 	public int numberOfIterations;
-	public float ratio;
 	public Tile tile;
 	public bool shouldDebugDrawBsp;
 	
@@ -83,6 +82,6 @@ public class DungeonGenerator : MonoBehaviour {
 
     private void GenerateUsingBsp()
     {
-		tree = BspTree.Split(numberOfIterations, ratio, new RectInt(0, 0, dungeonSize, dungeonSize));
+		tree = BspTree.Split(numberOfIterations, new RectInt(0, 0, dungeonSize, dungeonSize));
     }
 }

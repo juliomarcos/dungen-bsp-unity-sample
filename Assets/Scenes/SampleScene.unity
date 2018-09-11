@@ -310,7 +310,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   dungeonSize: 64
-  numberOfIterations: 2
+  numberOfIterations: 1
   ratio: 0.5
   tile: {fileID: 11400000, guid: f23feb9573b904f9e90c8cabdf12f26c, type: 2}
   shouldDebugDrawBsp: 1
