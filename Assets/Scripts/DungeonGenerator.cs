@@ -36,8 +36,15 @@ public class DungeonGenerator : MonoBehaviour {
 		}
 	}
 
-	// Update is called once per frame
 	void OnDrawGizmos () {
+		AttemptDebugDrawBsp();
+	}
+
+	private void OnDrawGizmosSelected() {
+		AttemptDebugDrawBsp();
+	}
+
+	void AttemptDebugDrawBsp() {
 		if (shouldDebugDrawBsp) {
 			DebugDrawBsp ();
 		}
@@ -99,11 +106,38 @@ public class DungeonGenerator : MonoBehaviour {
 		UpdateTilemapUsingTreeNode (tree);
 	}
 
+	private void GenerateCorridors()
+	{
+		// for each parent
+		// find their center
+		// find a direction and connect these centers
+		GenerateCorridorsNode(tree);
+	}
+
+	private void GenerateCorridorsNode(BspTree node) {
+		if (node.left != null && node.right != null) {
+			RectInt leftContainer = node.left.container;
+			RectInt rightContainer = node.right.container;
+			Vector2 leftCenter = leftContainer.center;
+			Vector2 rightCenter = rightContainer.center;
+			Vector2 direction = (rightCenter - leftCenter).normalized; // arbitrarily choosing right as the target point
+			while (Vector2.Distance(leftCenter, rightCenter) > 1) {
+				leftCenter.x += direction.x;
+				leftCenter.y += direction.y;
+				map.SetTile(new Vector3Int((int) leftCenter.x, (int) leftCenter.y, 0), tile);
+			}
+		} else {
+			if (node.left != null) GenerateCorridorsNode (node.left);
+			if (node.right != null) GenerateCorridorsNode (node.right);
+		}
+	}
+
 	public void GenerateDungeon () {
 		InitReferences ();
 		InitDungeonMatrix ();
 		GenerateContainersUsingBsp ();
 		GenerateRoomsInsideContainers ();
+		GenerateCorridors();
 		UpdateTilemapUsingTree ();
 		//CreatePathsBetweenContainersCenters();
 		DrawTilesBasedOnMatrix ();
