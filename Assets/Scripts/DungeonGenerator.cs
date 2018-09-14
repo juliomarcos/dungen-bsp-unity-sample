@@ -9,11 +9,33 @@ public class DungeonGenerator : MonoBehaviour {
 	public int dungeonSize;
 	[Range (1, 6)]
 	public int numberOfIterations;
-	public Tile tile;
+	[Range (1, 4)]
+	public int corridorThickness;
 	public bool shouldDebugDrawBsp;
 
+	public Tile debugTile;
+	public const int MIN_ROOM_DELTA = 2;
+
+	[HideInInspector]
+	public Tile tlTile;
+	[HideInInspector]
+	public Tile tmTile;
+	[HideInInspector]
+	public Tile trTile;
+	[HideInInspector]
+	public Tile mlTile;
+	[HideInInspector]
+	public Tile mmTile;
+	[HideInInspector]
+	public Tile mrTile;
+	[HideInInspector]
+	public Tile blTile;
+	[HideInInspector]
+	public Tile bmTile;
+	[HideInInspector]
+	public Tile brTile;
+
 	private Tilemap map;
-	private char[, ] dungeon;
 	private BspTree tree;
 
 	// Use this for initialization
@@ -21,30 +43,15 @@ public class DungeonGenerator : MonoBehaviour {
 
 	}
 
-	private void InitDungeonMatrix () {
-		dungeon = new char[dungeonSize, dungeonSize];
-	}
-
-	private void DrawTilesBasedOnMatrix () {
-		for (int i = 0; i < dungeonSize; i++) {
-			for (int j = 0; j < dungeonSize; j++) {
-				var tileDescriptor = dungeon[i, j];
-				if (tileDescriptor == 'f') {
-					map.SetTile (new Vector3Int (i, j, 0), tile);
-				}
-			}
-		}
-	}
-
 	void OnDrawGizmos () {
-		AttemptDebugDrawBsp();
+		AttemptDebugDrawBsp ();
 	}
 
-	private void OnDrawGizmosSelected() {
-		AttemptDebugDrawBsp();
+	private void OnDrawGizmosSelected () {
+		AttemptDebugDrawBsp ();
 	}
 
-	void AttemptDebugDrawBsp() {
+	void AttemptDebugDrawBsp () {
 		if (shouldDebugDrawBsp) {
 			DebugDrawBsp ();
 		}
@@ -88,59 +95,106 @@ public class DungeonGenerator : MonoBehaviour {
 
 	private void UpdateTilemapUsingTreeNode (BspTree node) {
 		if (node.left == null && node.right == null) {
-			for (int i = node.room.x; i < node.room.xMax; i++)
-			{
-				for (int j = node.room.y; j < node.room.yMax; j++)
-				{
-					map.SetTile(new Vector3Int(i, j, 0), tile);
+			for (int i = node.room.x; i < node.room.xMax; i++) {
+				for (int j = node.room.y; j < node.room.yMax; j++) {
+					map.SetTile (new Vector3Int (i, j, 0), mmTile);
 				}
 			}
-			
+
 		} else {
 			if (node.left != null) UpdateTilemapUsingTreeNode (node.left);
 			if (node.right != null) UpdateTilemapUsingTreeNode (node.right);
 		}
 	}
 
-	private void UpdateTilemapUsingTree () {
+	private void FillRoomsOnTilemap () {
 		UpdateTilemapUsingTreeNode (tree);
 	}
 
-	private void GenerateCorridors()
-	{
+	private void GenerateCorridors () {
 		// for each parent
 		// find their center
 		// find a direction and connect these centers
-		GenerateCorridorsNode(tree);
+		GenerateCorridorsNode (tree);
 	}
 
-	private void GenerateCorridorsNode(BspTree node) {
+	private void GenerateCorridorsNode (BspTree node) {
 		if (node.left != null && node.right != null) {
 			RectInt leftContainer = node.left.container;
 			RectInt rightContainer = node.right.container;
 			Vector2 leftCenter = leftContainer.center;
 			Vector2 rightCenter = rightContainer.center;
 			Vector2 direction = (rightCenter - leftCenter).normalized; // arbitrarily choosing right as the target point
-			while (Vector2.Distance(leftCenter, rightCenter) > 1) {
+			while (Vector2.Distance (leftCenter, rightCenter) > 1) {
+				if (direction.Equals (Vector2.right)) {
+					for (int i = 0; i < corridorThickness; i++) {
+						map.SetTile (new Vector3Int ((int) leftCenter.x, (int) leftCenter.y + i, 0), mmTile);
+					}
+				} else if (direction.Equals (Vector2.up)) {
+					for (int i = 0; i < corridorThickness; i++) {
+						map.SetTile (new Vector3Int ((int) leftCenter.x + i, (int) leftCenter.y, 0), mmTile);
+					}
+				}
 				leftCenter.x += direction.x;
 				leftCenter.y += direction.y;
-				map.SetTile(new Vector3Int((int) leftCenter.x, (int) leftCenter.y, 0), tile);
 			}
-		} else {
 			if (node.left != null) GenerateCorridorsNode (node.left);
 			if (node.right != null) GenerateCorridorsNode (node.right);
 		}
 	}
 
+	private Tile GetTileByNeihbors (int i, int j) {
+		var mmGridTile = map.GetTile (new Vector3Int (i,   j, 0));
+		if (mmGridTile == null) return null; // you shouldn't repaint a null
+
+		var blGridTile = map.GetTile (new Vector3Int (i-1, j-1, 0));
+		var bmGridTile = map.GetTile (new Vector3Int (i,   j-1, 0));
+		var brGridTile = map.GetTile (new Vector3Int (i+1, j-1, 0));
+
+		var mlGridTile = map.GetTile (new Vector3Int (i-1, j, 0));
+		var mrGridTile = map.GetTile (new Vector3Int (i+1, j, 0));
+
+		var tlGridTile = map.GetTile (new Vector3Int (i-1, j+1, 0));
+		var tmGridTile = map.GetTile (new Vector3Int (i,   j+1, 0));
+		var trGridTile = map.GetTile (new Vector3Int (i+1, j+1, 0));
+
+		// we have 8 + 1 cases
+		
+		// left
+		if (mlGridTile == null && tmGridTile == null) return tlTile;
+		if (mlGridTile == null && tmGridTile != null && bmGridTile != null) return mlTile;
+		if (mlGridTile == null && bmGridTile == null && tmGridTile != null) return blTile;
+		
+		// middle
+		if (mlGridTile != null && tmGridTile == null && mrGridTile != null) return tmTile;
+		if (mlGridTile != null && bmGridTile == null && mrGridTile != null) return bmTile;
+		
+		// right
+		if (mlGridTile != null && tmGridTile == null && mrGridTile == null) return trTile;
+		if (tmGridTile != null && bmGridTile != null && mrGridTile == null) return mrTile;
+		if (tmGridTile != null && bmGridTile == null && mrGridTile == null) return brTile;
+
+		return mmTile; // default case
+	}
+
+	private void PaintTilesAccordingToTheirNeighbors () {
+		for (int i = MIN_ROOM_DELTA; i < dungeonSize; i++) {
+			for (int j = MIN_ROOM_DELTA; j < dungeonSize; j++) {
+				var tile = GetTileByNeihbors (i, j);
+				if (tile != null) {
+					map.SetTile(new Vector3Int(i, j, 0), tile);
+				}
+			}
+		}
+	}
+
 	public void GenerateDungeon () {
 		InitReferences ();
-		InitDungeonMatrix ();
 		GenerateContainersUsingBsp ();
 		GenerateRoomsInsideContainers ();
-		GenerateCorridors();
-		UpdateTilemapUsingTree ();
-		//CreatePathsBetweenContainersCenters();
-		DrawTilesBasedOnMatrix ();
+		GenerateCorridors ();
+		FillRoomsOnTilemap ();
+		PaintTilesAccordingToTheirNeighbors ();
 	}
 
 }

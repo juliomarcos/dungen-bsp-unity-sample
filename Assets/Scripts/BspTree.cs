@@ -45,8 +45,8 @@ public class BspTree {
 	{
 		// should create rooms for leafs
 		if (node.left == null && node.right == null) {
-            var randomX = UnityEngine.Random.Range(2, node.container.width / 4);
-            var randomY = UnityEngine.Random.Range(2, node.container.height / 4);
+            var randomX = UnityEngine.Random.Range(DungeonGenerator.MIN_ROOM_DELTA, node.container.width / 4);
+            var randomY = UnityEngine.Random.Range(DungeonGenerator.MIN_ROOM_DELTA, node.container.height / 4);
             int roomX = node.container.x + randomX;
             int roomY = node.container.y + randomY;
             int roomW = node.container.width - (int) (randomX * UnityEngine.Random.Range(1f, 2f));
