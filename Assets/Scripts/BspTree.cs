@@ -16,6 +16,10 @@ public class BspTree {
         return left == null && right == null;
     }
 
+    public bool IsInternal() {
+        return left != null || right != null;
+    }
+
     internal static BspTree Split (int numberOfIterations, RectInt container) {
         var node = new BspTree (container);
         if (numberOfIterations == 0) return node;
@@ -44,7 +48,7 @@ public class BspTree {
     public static void GenerateRoomsInsideContainersNode(BspTree node) 
 	{
 		// should create rooms for leafs
-		if (node.left == null && node.right == null) {
+		if (node.IsLeaf()) {
             var randomX = UnityEngine.Random.Range(DungeonGenerator.MIN_ROOM_DELTA, node.container.width / 4);
             var randomY = UnityEngine.Random.Range(DungeonGenerator.MIN_ROOM_DELTA, node.container.height / 4);
             int roomX = node.container.x + randomX;

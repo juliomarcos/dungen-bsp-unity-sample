@@ -1,16 +1,16 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.Tilemaps;
 
 public class DungeonGenerator : MonoBehaviour {
 
 	public int dungeonSize;
-	[Range (1, 6)]
+
+	[Range (0, 6)]
 	public int numberOfIterations;
+
 	[Range (1, 4)]
 	public int corridorThickness;
+
 	public bool shouldDebugDrawBsp;
 
 	public Tile debugTile;
@@ -83,6 +83,7 @@ public class DungeonGenerator : MonoBehaviour {
 	private void InitReferences () {
 		map = GetComponentInChildren<Tilemap> ();
 		map.ClearAllTiles ();
+		Random.InitState(3);
 	}
 
 	private void GenerateRoomsInsideContainers () {
@@ -119,7 +120,9 @@ public class DungeonGenerator : MonoBehaviour {
 	}
 
 	private void GenerateCorridorsNode (BspTree node) {
-		if (node.left != null && node.right != null) {
+		print ('a');
+		if (node.IsInternal()) {
+			print('b');
 			RectInt leftContainer = node.left.container;
 			RectInt rightContainer = node.right.container;
 			Vector2 leftCenter = leftContainer.center;
@@ -194,7 +197,7 @@ public class DungeonGenerator : MonoBehaviour {
 		GenerateRoomsInsideContainers ();
 		GenerateCorridors ();
 		FillRoomsOnTilemap ();
-		PaintTilesAccordingToTheirNeighbors ();
+		//PaintTilesAccordingToTheirNeighbors ();
 	}
 
 }
